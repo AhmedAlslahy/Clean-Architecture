@@ -1,0 +1,10 @@
+﻿namespace Domain.Identity;
+
+public class Role
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string RoleName { get; set; } = string.Empty;
+    public string NormalizedRoleName { get; set; } = string.Empty;
+
+    public ICollection<User> Users { get; set; } = new HashSet<User>();
+}
