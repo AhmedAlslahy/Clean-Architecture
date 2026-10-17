@@ -1,0 +1,11 @@
+﻿namespace Infrastructure.Persistence.Data;
+
+public static class AutomatedMigration
+{
+    public static async Task MigrateAsync(IServiceProvider serviceProvider)
+    {
+        var context = serviceProvider.GetRequiredService<SarhneDbContext>();
+
+        if (context.Database.IsSqlServer()) await context.Database.MigrateAsync();
+    }
+}

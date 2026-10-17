@@ -1,16 +1,16 @@
 ﻿using Domain.Common;
-using Domain.Identity;
+using Domain.Entities.Identity;
 
 namespace Domain.Entities;
 
-public class UserSetting : BaseEntity<int>, IAuditable
+public class UserSetting : BaseEntity
 {
     public bool AllowAnonymousMessages { get; private set; } = true;
     public bool ShowLastSeen { get; private set; } = true;
     public bool ShowProfileViews { get; private set; } = true;
 
     //Relations
-    public string UserId { get; set; } = string.Empty;
+    public int UserId { get; set; }
 
     public User User { get; set; } = null!;
 

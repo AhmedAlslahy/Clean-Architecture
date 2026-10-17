@@ -1,43 +1,39 @@
-﻿using Infrastructure.Service.Shared;
+﻿using Application.Common.Interfaces;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Infrastructure.Interceptors;
 
-public class AuditInterceptor(ICurrentUser currentUser) : SaveChangesInterceptor
+public class AuditInterceptor : SaveChangesInterceptor
 {
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
-    DbContextEventData eventData,
-    InterceptionResult<int> result,
-    CancellationToken cancellationToken = default)
+        DbContextEventData eventData,
+        InterceptionResult<int> result,
+        CancellationToken cancellationToken = default)
     {
         var context = eventData.Context;
 
         if (context is null)
             return base.SavingChangesAsync(eventData, result, cancellationToken);
 
-        foreach (var entry in context.ChangeTracker.Entries<IAuditable>())
+        var currentUser = context.GetService<ICurrentUserService>();
+
+        if (!currentUser.IsAuthenticated)
+            return base.SavingChangesAsync(eventData, result, cancellationToken);
+
+        foreach (var entry in context.ChangeTracker.Entries<IAuditableEntity>())
         {
             if (entry.State == EntityState.Added)
-                entry.Entity.CreatedAt = DateTime.UtcNow;
+            {
+                entry.Entity.CreatedById = currentUser.UserId;
+            }
 
             if (entry.State == EntityState.Modified)
+            {
                 entry.Entity.UpdatedAt = DateTime.UtcNow;
+                entry.Entity.UpdatedById = currentUser.UserId;
+            }
         }
 
-        foreach (var entry in context.ChangeTracker.Entries<ISoftDeletable>())
-        {
-            if (entry.State != EntityState.Deleted)
-                continue;
-
-            entry.State = EntityState.Modified;
-
-            entry.Entity.IsDeleted = true;
-            entry.Entity.DeletedAt = DateTime.UtcNow;
-            entry.Entity.DeletedById = currentUser.UserId;
-        }
-
-        return base.SavingChangesAsync(
-            eventData,
-            result,
-            cancellationToken);
+        return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 }
