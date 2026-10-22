@@ -1,6 +1,6 @@
 ﻿using Domain.Entities.Identity;
 
-namespace Infrastructure.Persistence.Configration;
+namespace Infrastructure.Persistence.Configration.Identity;
 
 public class RoleConfig : IEntityTypeConfiguration<Role>
 {

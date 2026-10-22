@@ -1,4 +1,5 @@
 ﻿using API.Common;
+using Domain.Constants;
 using MediatR;
 
 namespace API.EndPoints.Users.User;
@@ -14,7 +15,8 @@ public static class GetByLink
                 var result = await sender.Send(query, cancellationToken);
 
                 return result.ToHttpResult();
-            }).WithTags("User");
+            }).RequireAuthorization("UserOnly")
+              .RequireAuthorization(Permissions.Users.Read).WithTags("User");
 
         return app;
     }

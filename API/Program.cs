@@ -1,3 +1,4 @@
+using Api.Authorization;
 using API;
 using API.EndPoints.Admin;
 using API.EndPoints.Auth;
@@ -9,6 +10,8 @@ using Hangfire;
 using Infrastructure.BackgroundJobs;
 using Infrastructure.Persistence.Data;
 using Infrastructure.Persistence.Data.Seeding;
+using Infrastructure.Security;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,7 +38,10 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+
 builder.Services.AddAuthorizationServices();
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 //------------------------------------------------------------------------------------------
 var app = builder.Build();
 

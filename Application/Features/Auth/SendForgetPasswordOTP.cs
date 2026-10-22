@@ -1,5 +1,6 @@
 ﻿using Application.Common.Abstraction;
 using Application.Common.Errors;
+using Application.Common.Extensions;
 using Application.Common.Interfaces;
 using Application.Common.Models;
 using Domain.Entities.Outbox;
@@ -19,16 +20,18 @@ public static class SendForgetPasswordOTP
         public Validator()
         {
             RuleFor(x => x.Email)
-                .NotEmpty()
-                .WithMessage("Email is required.")
-                .EmailAddress()
-                .WithMessage("Invalid email format.");
+             .Cascade(CascadeMode.Stop)
+             .NotEmpty()
+             .WithMessage("Email is required.")
+             .MaximumLength(254)
+             .WithMessage("Email must not exceed 254 characters.")
+             .EmailAddress()
+             .WithMessage("Invalid email format.");
         }
     }
 
     public sealed class Handler(
         IApplicationDbContext context,
-        IUserService users,
         IFilePathService filePathService)
         : IRequestHandler<Command, Result>
     {
@@ -36,7 +39,7 @@ public static class SendForgetPasswordOTP
             Command req,
             CancellationToken cancellationToken)
         {
-            var user = await users.FindByEmailAsync(req.Email);
+            var user = await context.Users.FindByEmailAsync(req.Email, cancellationToken);
 
             if (user is null)
                 return UserErrors.NotFound;

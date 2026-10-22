@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using Domain.Constants;
+using MediatR;
 
 namespace API.EndPoints.Users.Message
 {
@@ -15,8 +16,8 @@ namespace API.EndPoints.Users.Message
                 var result = await sender.Send(query, cancellationToken);
 
                 return Results.Ok(result);
-            })
-            .RequireAuthorization()
+            }).RequireAuthorization("UserOnly")
+            .RequireAuthorization(Permissions.Messages.Read)
             .WithTags("User");
 
             return app;

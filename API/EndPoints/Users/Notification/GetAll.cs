@@ -1,4 +1,5 @@
 ﻿using Application.Features.User.Notifications;
+using Domain.Constants;
 using MediatR;
 
 namespace API.EndPoints.Users.Notification;
@@ -15,8 +16,8 @@ public static class GetAll
             var result = await sender.Send(query, cancellationToken);
 
             return Results.Ok(result);
-        })
-        .RequireAuthorization()
+        }).RequireAuthorization("UserOnly")
+        .RequireAuthorization(Permissions.Notifications.Read)
         .WithTags("User");
 
         return app;

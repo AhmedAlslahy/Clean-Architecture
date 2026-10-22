@@ -1,7 +1,7 @@
 ﻿using Application.Common.Abstraction;
 using MediatR;
-using Application.Common.Interfaces;
 using Application.Common.Errors;
+using Application.Common.Extensions;
 
 namespace Application.Features.Admin.Roles;
 
@@ -9,11 +9,11 @@ public static class AddAdminRole
 {
     public sealed record Command(int UserId) : IRequest<Result>;
 
-    public sealed class Handler(IUserService users) : IRequestHandler<Command, Result>
+    public sealed class Handler(IApplicationDbContext context) : IRequestHandler<Command, Result>
     {
         public async Task<Result> Handle(Command req, CancellationToken cancellationToken = default)
         {
-            var user = await users.FindByIdAsync(req.UserId);
+            var user = await context.Users.FindByIdAsync(req.UserId, cancellationToken);
             if (user == null)
             {
                 return UserErrors.NotFound;
@@ -24,7 +24,7 @@ public static class AddAdminRole
                 return RoleErrors.AlreadyExists;
             }
 
-            await users.AddRoleToUserAsync(user.Id, "Admin");
+            await context.AddRoleToUserAsync(user.Id, "Admin");
             return Result.Success();
         }
     }

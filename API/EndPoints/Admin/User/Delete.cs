@@ -1,4 +1,5 @@
 ﻿using API.Common;
+using Domain.Constants;
 using MediatR;
 
 namespace API.EndPoints.Admin.User
@@ -14,7 +15,8 @@ namespace API.EndPoints.Admin.User
                     var result = await sender.Send(command, cancellationToken);
 
                     return result.ToHttpResult();
-                }).RequireAuthorization("AdminOnly").WithTags("Admin");
+                }).RequireAuthorization("AdminOnly")
+                  .RequireAuthorization(Permissions.Users.Delete).WithTags("Admin");
 
             return app;
         }

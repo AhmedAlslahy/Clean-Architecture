@@ -1,4 +1,5 @@
 ﻿using API.Common;
+using Domain.Constants;
 using MediatR;
 
 namespace API.EndPoints.Admin.Role;
@@ -17,8 +18,8 @@ public static class Delete
                 var result = await sender.Send(command, cancellationToken);
 
                 return result.ToHttpResult();
-            })
-            .RequireAuthorization("AdminOnly").WithTags("Admin");
+            }).RequireAuthorization("AdminOnly")
+            .RequireAuthorization(Permissions.Roles.Delete).WithTags("Admin");
 
         return app;
     }

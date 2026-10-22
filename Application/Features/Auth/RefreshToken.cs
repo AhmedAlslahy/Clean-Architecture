@@ -1,5 +1,6 @@
 ﻿using Application.Common.Abstraction;
 using Application.Common.Errors;
+using Application.Common.Extensions;
 using Application.Common.Interfaces;
 using FluentValidation;
 using MediatR;
@@ -24,13 +25,15 @@ public static class RefreshToken
         public Validator()
         {
             RuleFor(x => x.RefreshToken)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .WithMessage("Refresh token is required.");
+                .WithMessage("Refresh token is required.")
+                .MaximumLength(256)
+                .WithMessage("Refresh token is too long.");
         }
     }
 
     public sealed class Handler(IApplicationDbContext context,
-    IUserService users,
     IJwtService jwtService,
     IRefreshTokenService refreshTokenService)
     : IRequestHandler<Command, Result<RefreshTokenRes>>
@@ -41,8 +44,7 @@ public static class RefreshToken
         {
             var tokenHash = refreshTokenService.HashToken(req.RefreshToken);
 
-            var storedToken =
-                await context.RefreshTokens
+            var storedToken = await context.RefreshTokens
                     .Include(x => x.User)
                     .FirstOrDefaultAsync(x => x.TokenHash == tokenHash, cancellationToken);
 
@@ -53,7 +55,7 @@ public static class RefreshToken
 
             var user = storedToken.User;
 
-            var roles = await users.GetRolesAsync(user.Id);
+            var roles = await context.Users.GetRolesAsync(user.Id, cancellationToken);
 
             // Generate new Access Token
             var tokenResult = await jwtService.GenerateToken(user, roles);
@@ -68,16 +70,17 @@ public static class RefreshToken
 
             var newRefreshTokenHash = refreshTokenService.HashToken(newRefreshToken);
 
+            var now = DateTime.UtcNow;
             var newRefreshTokenEntity = new Domain.Entities.Identity.RefreshToken
             {
                 TokenHash = newRefreshTokenHash,
                 UserId = user.Id,
-                CreatedOn = DateTime.UtcNow,
-                ExpiresOn = DateTime.UtcNow.AddDays(7)
+                CreatedOn = now,
+                ExpiresOn = now.AddDays(7)
             };
 
             // Revoke old token
-            storedToken.RevokedOn = DateTime.UtcNow;
+            storedToken.RevokedOn = now;
             storedToken.ReplacedByTokenHash = newRefreshTokenHash;
             context.RefreshTokens.Add(newRefreshTokenEntity);
             await context.SaveChangesAsync(cancellationToken);

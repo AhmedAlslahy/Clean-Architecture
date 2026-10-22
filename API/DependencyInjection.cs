@@ -81,7 +81,6 @@ public static class DependencyInjection
         services.AddScoped<IFilePathService, FilePathService>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
-        services.AddScoped<IUserService, UserService>();
         services.AddScoped<INotificationHub, SignalRNotificationPublisher>();
         services.AddScoped<IMessageHub, SignalRMessagePublisher>();
         services.AddScoped<ICacheService, CacheService>();

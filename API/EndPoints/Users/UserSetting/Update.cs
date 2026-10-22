@@ -1,4 +1,5 @@
 ﻿using API.Common;
+using Domain.Constants;
 using MediatR;
 
 namespace API.EndPoints.Users.UserSetting;
@@ -14,7 +15,8 @@ public static class Update
                 var result = await sender.Send(command, cancellationToken);
 
                 return result.ToHttpResult();
-            }).RequireAuthorization().WithTags("User");
+            }).RequireAuthorization("UserOnly")
+              .RequireAuthorization(Permissions.UserSetting.Update).WithTags("User");
 
         return app;
     }

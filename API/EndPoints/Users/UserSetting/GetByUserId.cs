@@ -1,4 +1,5 @@
 ﻿using API.Common;
+using Domain.Constants;
 using MediatR;
 
 namespace API.EndPoints.Users.UserSetting;
@@ -13,8 +14,8 @@ public static class GetByUserId
                 var result = await sender.Send(new Application.Features.User.UsersSetting.GetByUserId.Query(), cancellationToken);
 
                 return result.ToHttpResult();
-            })
-            .RequireAuthorization().WithTags("User");
+            }).RequireAuthorization("UserOnly")
+            .RequireAuthorization(Permissions.UserSetting.Read).WithTags("User");
 
         return app;
     }

@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using FluentValidation;
 using MediatR;
+using Application.Common.Extensions;
 
 namespace Application.Features.Auth;
 
@@ -19,16 +20,18 @@ public static class SendConfirmEmailOTP
         public Validator()
         {
             RuleFor(x => x.Email)
-                .NotEmpty()
-                .WithMessage("Email is required.")
-                .EmailAddress()
-                .WithMessage("Invalid email format.");
+              .Cascade(CascadeMode.Stop)
+              .NotEmpty()
+              .WithMessage("Email is required.")
+              .MaximumLength(254)
+              .WithMessage("Email must not exceed 254 characters.")
+              .EmailAddress()
+              .WithMessage("Invalid email format.");
         }
     }
 
     public sealed class Handler(
         IApplicationDbContext context,
-        IUserService users,
         IFilePathService filePathService)
         : IRequestHandler<Command, Result>
     {
@@ -36,9 +39,9 @@ public static class SendConfirmEmailOTP
             Command req,
             CancellationToken cancellationToken)
         {
-            var user = await users.FindByEmailAsync(req.Email);
+            var user = await context.Users.FindByEmailAsync(req.Email, cancellationToken);
 
-            if (user is null)
+            if (user is null || user.EmailConfirmed)
                 return UserErrors.NotFound;
 
             var otp = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();

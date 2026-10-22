@@ -4,6 +4,7 @@ using MediatR;
 using Application.Common.Abstraction;
 using Application.Common.Errors;
 using Domain.Enums;
+using Application.Common.Extensions;
 
 namespace Application.Features.Auth;
 
@@ -16,18 +17,21 @@ public static class ConfirmEmail
         public Validator()
         {
             RuleFor(x => x.OTP)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .Matches(@"^\d{6}$");
+                .WithMessage("OTP is required.")
+                .Matches(@"^\d{6}$")
+                .WithMessage("OTP must contain exactly 6 digits.");
         }
     }
 
     public sealed class Handler(IApplicationDbContext context,
-        ICurrentUserService currentUser, IUserService users)
+        ICurrentUserService currentUser)
         : IRequestHandler<Command, Result>
     {
         public async Task<Result> Handle(Command req, CancellationToken cancellationToken)
         {
-            var user = await users.FindByIdAsync(currentUser.UserId);
+            var user = await context.Users.FindByIdAsync(currentUser.UserId, cancellationToken);
 
             if (user == null)
             {

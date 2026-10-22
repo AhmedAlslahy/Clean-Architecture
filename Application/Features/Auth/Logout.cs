@@ -16,8 +16,11 @@ public static class Logout
         public Validator()
         {
             RuleFor(x => x.RefreshToken)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .WithMessage("Refresh token is required.");
+                .WithMessage("Refresh token is required.")
+                .MaximumLength(256)
+                .WithMessage("Refresh token is too long.");
         }
     }
 
@@ -30,8 +33,7 @@ public static class Logout
         {
             var tokenHash = refreshTokenService.HashToken(req.RefreshToken);
 
-            var refreshToken =
-                await context.RefreshTokens
+            var refreshToken = await context.RefreshTokens
                 .FirstOrDefaultAsync(x => x.TokenHash == tokenHash, cancellationToken);
 
             if (refreshToken is null || refreshToken.RevokedOn is not null)

@@ -1,4 +1,5 @@
 ﻿using Application.Features.User.Messages;
+using Domain.Constants;
 using MediatR;
 
 namespace API.EndPoints.Users.Message;
@@ -16,8 +17,8 @@ public static class GetMessageById
             var result = await sender.Send(new GetMessage.Query(id), cancellationToken);
 
             return Results.Ok(result);
-        })
-        .RequireAuthorization()
+        }).RequireAuthorization("UserOnly")
+        .RequireAuthorization(Permissions.Messages.Read)
         .WithTags("User");
 
         return app;

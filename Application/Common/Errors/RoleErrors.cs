@@ -11,6 +11,9 @@ public class RoleErrors
     public static Error InvalidData
        = new Error("Role.InvalidData", "Invalid Role data", ErrorType.BadRequest);
 
+    public static Error CannotDeleteSystemRole
+        = new Error("Role.CannotDeleteSystemRole", "Cannot Delete System Role", ErrorType.BadRequest);
+
     public static Error AlreadyExists
        = new Error("Role.AlreadyExists", "Already Exists Role data", ErrorType.Conflict);
 }

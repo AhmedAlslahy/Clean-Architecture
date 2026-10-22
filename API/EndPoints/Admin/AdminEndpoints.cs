@@ -1,4 +1,5 @@
 ﻿using API.EndPoints.Admin.Notification;
+using API.EndPoints.Admin.Permission;
 using API.EndPoints.Admin.Role;
 using API.EndPoints.Admin.User;
 
@@ -13,6 +14,12 @@ public static class AdminEndpoints
         app.MapDeleteRoleEndpoint();
         app.MapGetAllRolesEndpoint();
         app.MapAddAdminRoleToUserEndpoint();
+
+        //permission
+
+        app.MapGetGroupedPermissionsEndpoint();
+        app.MapGetRolePermissionsEndpoint();
+        app.MapAssignPermissionsToRoleEndpoint();
 
         //user
         app.MapGetAllUsersEndpoint();

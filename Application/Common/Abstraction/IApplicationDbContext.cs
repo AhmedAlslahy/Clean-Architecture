@@ -7,14 +7,22 @@ namespace Application.Common.Abstraction;
 
 public interface IApplicationDbContext
 {
-    DbSet<User> Users { get; set; }
-    DbSet<Role> Roles { get; set; }
-    DbSet<UserRole> UserRoles { get; set; }
-    DbSet<UserSetting> UserSettings { get; set; }
-    DbSet<Notification> Notifications { get; set; }
-    DbSet<Message> Messages { get; set; }
-    DbSet<RefreshToken> RefreshTokens { get; set; }
-    DbSet<OutboxMessage> OutboxMessages { get; }
+    //Identity
+    public DbSet<User> Users { get; set; }
+
+    public DbSet<Role> Roles { get; set; }
+    public DbSet<UserRole> UserRoles { get; set; }
+    public DbSet<Permission> Permissions { get; set; }
+    public DbSet<RolePermission> RolePermissions { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+    //Entities
+    public DbSet<UserSetting> UserSettings { get; set; }
+
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<Message> Messages { get; set; }
+
+    public DbSet<OutboxMessage> OutboxMessages { get; set; }
 
     Task<int> SaveChangesAsync(
         CancellationToken cancellationToken = default);

@@ -1,4 +1,5 @@
 ﻿using API.Common;
+using Domain.Constants;
 using MediatR;
 
 namespace API.EndPoints.Admin.Role;
@@ -13,7 +14,8 @@ public static class GetAll
                 var result = await sender.Send(new Application.Features.Admin.Roles.GetAllRoles.Query(), cancellationToken);
 
                 return result.ToHttpResult();
-            }).RequireAuthorization("AdminOnly").WithTags("Admin");
+            }).RequireAuthorization("AdminOnly")
+              .RequireAuthorization(Permissions.Roles.Read).WithTags("Admin");
 
         return app;
     }

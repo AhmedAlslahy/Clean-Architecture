@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using Domain.Constants;
+using MediatR;
 
 namespace API.EndPoints.Users.Message;
 
@@ -14,8 +15,8 @@ public static class GetUnreadMessagesCount
             var result = await sender.Send(new Application.Features.User.Messages.UnreadCountMessage.Query(), cancellationToken);
 
             return Results.Ok(result);
-        })
-        .RequireAuthorization()
+        }).RequireAuthorization("UserOnly")
+        .RequireAuthorization(Permissions.Messages.Read)
         .WithTags("User");
 
         return app;

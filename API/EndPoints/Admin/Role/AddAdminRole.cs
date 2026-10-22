@@ -1,4 +1,5 @@
 ﻿using API.Common;
+using Domain.Constants;
 using MediatR;
 
 namespace API.EndPoints.Admin.Role;
@@ -15,8 +16,8 @@ public static class AddAdminRole
                 var result = await sender.Send(command, cancellationToken);
 
                 return result.ToHttpResult();
-            })
-            .RequireAuthorization("AdminOnly").WithTags("Admin");
+            }).RequireAuthorization("AdminOnly")
+            .RequireAuthorization(Permissions.Roles.Create).WithTags("Admin");
 
         return app;
     }

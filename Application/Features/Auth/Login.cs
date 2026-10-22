@@ -1,5 +1,6 @@
 ﻿using Application.Common.Abstraction;
 using Application.Common.Errors;
+using Application.Common.Extensions;
 using Application.Common.Interfaces;
 using FluentValidation;
 using MediatR;
@@ -26,23 +27,26 @@ public static class Login
         public Validator()
         {
             RuleFor(x => x.Email)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .WithMessage("Email is required.")
+                    .WithMessage("Email is required.")
+                .MaximumLength(254)
+                    .WithMessage("Email must not exceed 254 characters.")
                 .EmailAddress()
-                .WithMessage("Invalid email format.");
+                    .WithMessage("Please enter a valid email address.");
 
             RuleFor(x => x.Password)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .WithMessage("Password is required.")
-                .MinimumLength(8)
-                .WithMessage("Password must be at least 8 characters.");
+                    .WithMessage("Password is required.")
+                .MaximumLength(128)
+                    .WithMessage("Password must not exceed 128 characters.");
         }
     }
 
     public sealed class Handler(
         IApplicationDbContext context,
         IPasswordService passwordService,
-        IUserService users,
         IRefreshTokenService refreshTokenService,
         IJwtService jwtService)
         : IRequestHandler<Command, Result<LoginRes>>
@@ -51,11 +55,11 @@ public static class Login
             Command req,
             CancellationToken cancellationToken)
         {
-            var user = await users.FindByEmailAsync(req.Email);
+            var user = await context.Users.FindByEmailAsync(req.Email, cancellationToken);
 
             if (user == null)
             {
-                return UserErrors.NotFound;
+                return AuthErrors.InvalidCredentials;
             }
 
             var passwordValid = passwordService.VerifyPassword(
@@ -64,10 +68,10 @@ public static class Login
 
             if (!passwordValid)
             {
-                return AuthErrors.InvalidPassword;
+                return AuthErrors.InvalidCredentials;
             }
 
-            var roles = await users.GetRolesAsync(user.Id);
+            var roles = await context.Users.GetRolesAsync(user.Id, cancellationToken);
 
             var tokenResult = await jwtService.GenerateToken(user, roles);
 
@@ -78,13 +82,13 @@ public static class Login
 
             // Generate Refresh Token
             var refreshToken = refreshTokenService.GenerateToken();
-
+            var now = DateTime.UtcNow;
             var refreshTokenEntity = new Domain.Entities.Identity.RefreshToken
             {
                 TokenHash = refreshTokenService.HashToken(refreshToken),
                 UserId = user.Id,
-                CreatedOn = DateTime.UtcNow,
-                ExpiresOn = DateTime.UtcNow.AddDays(7)
+                CreatedOn = now,
+                ExpiresOn = now.AddDays(7)
             };
 
             context.RefreshTokens.Add(refreshTokenEntity);

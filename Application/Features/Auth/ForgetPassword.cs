@@ -1,5 +1,6 @@
 ﻿using Application.Common.Abstraction;
 using Application.Common.Errors;
+using Application.Common.Extensions;
 using Application.Common.Interfaces;
 using Domain.Enums;
 using FluentValidation;
@@ -16,27 +17,38 @@ public static class ForgetPassword
         public Validator()
         {
             RuleFor(x => x.Email)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .EmailAddress();
+                .EmailAddress()
+                .MaximumLength(254);
 
             RuleFor(x => x.OTP)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
                 .Matches(@"^\d{6}$");
 
             RuleFor(x => x.NewPassword)
+                .Cascade(CascadeMode.Stop)
                 .NotEmpty()
-                .MinimumLength(8);
+                .MinimumLength(8)
+                .MaximumLength(128)
+                .Matches("[A-Z]")
+                .WithMessage("Password must contain an uppercase letter.")
+                .Matches("[a-z]")
+                .WithMessage("Password must contain a lowercase letter.")
+                .Matches("[0-9]")
+                .WithMessage("Password must contain a number.");
         }
     }
 
-    public sealed class Handler(IApplicationDbContext context, IUserService users, IPasswordService passwordService)
+    public sealed class Handler(IApplicationDbContext context, IPasswordService passwordService)
         : IRequestHandler<Command, Result>
     {
         public async Task<Result> Handle(
             Command req,
             CancellationToken cancellationToken)
         {
-            var user = await users.FindByEmailAsync(req.Email);
+            var user = await context.Users.FindByEmailAsync(req.Email, cancellationToken);
 
             if (user == null)
             {

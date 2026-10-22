@@ -20,4 +20,6 @@ public class Role : BaseEntity
 
     //Relations
     public ICollection<UserRole> UserRoles { get; set; } = [];
+
+    public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
 }

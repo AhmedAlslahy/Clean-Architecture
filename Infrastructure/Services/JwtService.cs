@@ -11,40 +11,55 @@ using System.Text;
 
 namespace Infrastructure.Services;
 
-public class JwtService(IOptions<JwtInformations> options) : IJwtService
+public sealed class JwtService(IOptions<JwtInformations> options)
+    : IJwtService
 {
-    private readonly JwtInformations jwt = options.Value;
+    private readonly JwtInformations _jwt = options.Value;
 
-    public async Task<Result<GenerateTokenRes>> GenerateToken(User user, IList<string> roles)
+    public Task<Result<GenerateTokenRes>> GenerateToken(
+        User user,
+        IList<string> roles)
     {
-        List<Claim> UserClaims =
-     [
-         new(ClaimTypes.Name, user.UserName),
-        new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-    ];
+        var now = DateTime.UtcNow;
+        var expires = now.AddHours(1);
+
+        List<Claim> claims =
+        [
+            new(ClaimTypes.Name, user.UserName),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        ];
 
         foreach (var role in roles)
         {
-            UserClaims.Add(new Claim(ClaimTypes.Role, role));
+            claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
-        var SignInKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SecretKey));
-        var SignInCred = new SigningCredentials(SignInKey, SecurityAlgorithms.HmacSha256);
+        var key = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(_jwt.SecretKey));
 
-        JwtSecurityToken userToken = new JwtSecurityToken(
-            audience: jwt.AudienceIP,
-            issuer: jwt.IssuerIP,
-            expires: DateTime.UtcNow.AddHours(1),
-            signingCredentials: SignInCred,
-            claims: UserClaims
-         );
+        var credentials = new SigningCredentials(
+            key,
+            SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: _jwt.IssuerIP,
+            audience: _jwt.AudienceIP,
+            claims: claims,
+            notBefore: now,
+            expires: expires,
+            signingCredentials: credentials);
+
+        var tokenString = new JwtSecurityTokenHandler()
+            .WriteToken(token);
+
         var data = new GenerateTokenRes
         {
-            Token = new JwtSecurityTokenHandler().WriteToken(userToken),
-            ExpireIn = DateTime.UtcNow.AddHours(1),
+            Token = tokenString,
+            ExpireIn = expires
         };
 
-        return Result<GenerateTokenRes>.Success(data);
+        return Task.FromResult(
+            Result<GenerateTokenRes>.Success(data));
     }
 }

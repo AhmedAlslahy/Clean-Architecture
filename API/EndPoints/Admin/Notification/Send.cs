@@ -1,4 +1,5 @@
 ﻿using API.Common;
+using Domain.Constants;
 using MediatR;
 
 namespace API.EndPoints.Admin.Notification;
@@ -16,8 +17,8 @@ public static class Send
                 var result = await sender.Send(command, cancellationToken);
 
                 return result.ToHttpResult();
-            })
-            .RequireAuthorization("AdminOnly").WithTags("Admin");
+            }).RequireAuthorization("AdminOnly")
+            .RequireAuthorization(Permissions.Notifications.Create).WithTags("Admin");
 
         return app;
     }
