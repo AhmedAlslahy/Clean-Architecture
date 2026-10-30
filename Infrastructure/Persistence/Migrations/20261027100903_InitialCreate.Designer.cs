@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(SarhneDbContext))]
-    [Migration("20261022211141_AddNotificationPermissions")]
-    partial class AddNotificationPermissions
+    [Migration("20261027100903_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

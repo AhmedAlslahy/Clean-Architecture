@@ -1,3 +1,4 @@
+
 using Api.Authorization;
 using API;
 using API.EndPoints.Admin;
@@ -25,6 +26,8 @@ builder.Services.AddSignalR();
 builder.Services.AddRedisCache();
 builder.Services.AddCorsPolicy();
 builder.Services.AddQuartzServices();
+builder.Services.AddRateLimitingServices();
+
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
@@ -70,6 +73,7 @@ app.UseStaticFiles();
 app.UseCors("MyPolicy");
 
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapAdminEndpoints();

@@ -8,5 +8,5 @@ public enum ErrorType
     Unauthorized = 401,
     NotFound = 404,
     Conflict = 409,
-    Forbidden = 403,
+    Forbidden = 403
 }

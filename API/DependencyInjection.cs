@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Quartz;
 using System.Text;
+using System.Threading.RateLimiting;
 
 namespace API;
 
@@ -136,6 +137,44 @@ public static class DependencyInjection
         services.AddQuartzHostedService(options =>
         {
             options.WaitForJobsToComplete = true;
+        });
+
+        return services;
+    }
+    public static IServiceCollection AddRateLimitingServices(
+       this IServiceCollection services)
+    {
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            options.OnRejected = async (context, cancellationToken) =>
+            {
+                context.HttpContext.Response.ContentType = "application/json";
+                await context.HttpContext.Response.WriteAsJsonAsync(new
+                {
+                    message = "Too many requests. Please wait and try again later."
+                }, cancellationToken);
+            };
+
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+            {
+                string clientKey = httpContext.User.Identity?.IsAuthenticated == true
+                    ? httpContext.User.Identity.Name!
+                    : httpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+
+                return RateLimitPartition.GetSlidingWindowLimiter(
+                    partitionKey: clientKey,
+                    factory: _ => new SlidingWindowRateLimiterOptions
+                    {
+                        PermitLimit = 100,                           
+                        Window = TimeSpan.FromMinutes(1),            
+                        SegmentsPerWindow = 4,                   
+                        QueueLimit = 10,                        
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        AutoReplenishment = true
+                    });
+            });
         });
 
         return services;
